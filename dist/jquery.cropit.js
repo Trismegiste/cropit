@@ -150,8 +150,9 @@
             this.moveContinue = false;
             this.zoomer = new Zoomer();
             this.$preview.on("mousedown mouseup mouseleave", this.onPreviewMouseEvent.bind(this));
+            this.$preview.on("touchstart touchmove touchend", this.onPreviewTouchEvent.bind(this));
             this.$fileInput.on("change", this.onFileChange.bind(this));
-            this.$imageZoomInput.on("mousedown mouseup mousemove", this.onSliderChange.bind(this));
+            this.$imageZoomInput.on("mousedown mouseup mousemove touchstart touchmove touchend", this.onSliderChange.bind(this));
             this.$imageZoomInput.val(this.initialSliderPos);
             this.setOffset(((_ref = this.options.imageState) != null ? _ref.offset : void 0) || this.initialOffset);
             this.zoom = ((_ref1 = this.options.imageState) != null ? _ref1.zoom : void 0) || this.initialZoom;
@@ -241,7 +242,7 @@
             }
             e.stopPropagation();
             return false;
-        };
+        };   
         Cropit.prototype.onMove = function(e) {
             if (this.moveContinue) {
                 this.setOffset({
@@ -252,6 +253,39 @@
             this.origin = {
                 x: e.clientX,
                 y: e.clientY
+            };
+            e.stopPropagation();
+            return false;
+        };        
+        Cropit.prototype.onPreviewTouchEvent = function(e) {
+            if (!this.imageLoaded) {
+                return;
+            }
+            this.moveContinue = false;
+            this.$preview.off("touchmove");
+            if (e.type === "touchstart") {
+                this.origin = {
+                    x: e.originalEvent.touches[0].clientX,
+                    y: e.originalEvent.touches[0].clientY
+                };
+                this.moveContinue = true;
+                this.$preview.on("touchmove", this.onTouchMove.bind(this));
+            } else {
+                $(document.body).focus();
+            }
+            e.stopPropagation();
+            return false;
+        };        
+        Cropit.prototype.onTouchMove = function(e) {
+            if (this.moveContinue) {
+                this.setOffset({
+                    x: this.offset.x + e.originalEvent.touches[0].clientX - this.origin.x,
+                    y: this.offset.y + e.originalEvent.touches[0].clientY - this.origin.y
+                });
+            }
+            this.origin = {
+                x: e.originalEvent.touches[0].clientX,
+                y: e.originalEvent.touches[0].clientY
             };
             e.stopPropagation();
             return false;
